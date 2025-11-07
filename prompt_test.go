@@ -4,8 +4,8 @@ import "testing"
 
 func TestPrompt(t *testing.T) {
 	p := NewPrompt()
-	p.AddSection(Section{"intro1", []Instruction{"test1", "test2"}})
-	p.AddSection(Section{"intro2", []Instruction{"test3", "test4"}})
+	p.AddSection(Section{"intro1", []Instruction{"test1", "test2"}, []DataBlock{}})
+	p.AddSection(Section{"intro2", []Instruction{"test3", "test4"}, []DataBlock{}})
 
 	expected := "\nintro1:\n- test1\n- test2\n---\nintro2:\n- test3\n- test4\n---"
 	actual := p.String()
@@ -17,8 +17,8 @@ func TestPrompt(t *testing.T) {
 
 func TestPromptWordsCount(t *testing.T) {
 	p := NewPrompt()
-	p.AddSection(Section{"intro1", []Instruction{"test1", "test2"}})
-	p.AddSection(Section{"intro2", []Instruction{"test3", "test4"}})
+	p.AddSection(Section{"intro1", []Instruction{"test1", "test2"}, []DataBlock{}})
+	p.AddSection(Section{"intro2", []Instruction{"test3", "test4"}, []DataBlock{}})
 
 	expected := 4
 	actual := p.WordCount()
@@ -30,8 +30,8 @@ func TestPromptWordsCount(t *testing.T) {
 
 func TestPromptTokenCount(t *testing.T) {
 	p := NewPrompt()
-	p.AddSection(Section{"intro1", []Instruction{"test1", "test2"}})
-	p.AddSection(Section{"intro2", []Instruction{"test3", "test4", "test5"}})
+	p.AddSection(Section{"intro1", []Instruction{"test1", "test2"}, []DataBlock{}})
+	p.AddSection(Section{"intro2", []Instruction{"test3", "test4", "test5"}, []DataBlock{}})
 
 	expected := 6
 	actual := p.TokenCount()
@@ -58,8 +58,8 @@ func TestPromptAddSections(t *testing.T) {
 	p := NewPrompt()
 
 	sections := []Section{
-		{"intro1", []Instruction{"test1"}},
-		{"intro2", []Instruction{"test2"}},
+		{"intro1", []Instruction{"test1"}, []DataBlock{}},
+		{"intro2", []Instruction{"test2"}, []DataBlock{}},
 	}
 
 	p.AddSections(sections)
@@ -238,22 +238,22 @@ func TestSectionString(t *testing.T) {
 	}{
 		{
 			name:     "Section with intro and instructions",
-			section:  Section{"Test", []Instruction{"inst1", "inst2"}},
+			section:  Section{"Test", []Instruction{"inst1", "inst2"}, []DataBlock{}},
 			expected: "Test:\n- inst1\n- inst2",
 		},
 		{
 			name:     "Section with intro ending in colon",
-			section:  Section{"Test:", []Instruction{"inst1"}},
+			section:  Section{"Test:", []Instruction{"inst1"}, []DataBlock{}},
 			expected: "Test:\n- inst1",
 		},
 		{
 			name:     "Section without intro",
-			section:  Section{"", []Instruction{"inst1", "inst2"}},
+			section:  Section{"", []Instruction{"inst1", "inst2"}, []DataBlock{}},
 			expected: "- inst1\n- inst2",
 		},
 		{
 			name:     "Empty section",
-			section:  Section{"", []Instruction{}},
+			section:  Section{"", []Instruction{}, []DataBlock{}},
 			expected: "",
 		},
 	}
@@ -275,6 +275,7 @@ func TestSectionWordsCount(t *testing.T) {
 			"one two three",
 			"four five",
 		},
+		DataBlocks: []DataBlock{},
 	}
 
 	expected := 5
@@ -287,8 +288,8 @@ func TestSectionWordsCount(t *testing.T) {
 
 func TestSectionsString(t *testing.T) {
 	sections := Sections{
-		{"intro1", []Instruction{"test1"}},
-		{"intro2", []Instruction{"test2"}},
+		{"intro1", []Instruction{"test1"}, []DataBlock{}},
+		{"intro2", []Instruction{"test2"}, []DataBlock{}},
 	}
 
 	expected := "\nintro1:\n- test1\n---\nintro2:\n- test2\n---"
@@ -301,8 +302,8 @@ func TestSectionsString(t *testing.T) {
 
 func TestWordsCount(t *testing.T) {
 	sections := []Section{
-		{"intro1", []Instruction{"one two"}},
-		{"intro2", []Instruction{"three four five"}},
+		{"intro1", []Instruction{"one two"}, []DataBlock{}},
+		{"intro2", []Instruction{"three four five"}, []DataBlock{}},
 	}
 
 	expected := 5
@@ -447,4 +448,288 @@ func BenchmarkNewInstruction(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_ = NewInstruction(text)
 	}
+}
+
+// Tests for JSON/XML/HTML data blocks
+
+func TestSectionAddJSONData(t *testing.T) {
+	section := NewSection("API Request")
+	section.AddInstruction("Use the following JSON structure")
+
+	data := map[string]any{
+		"name":  "John Doe",
+		"email": "john@example.com",
+		"age":   30,
+	}
+
+	err := section.AddJSONData("Example", data)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+
+	if len(section.DataBlocks) != 1 {
+		t.Errorf("Expected 1 data block, got %d", len(section.DataBlocks))
+	}
+
+	if section.DataBlocks[0].Type != "json" {
+		t.Errorf("Expected type 'json', got '%s'", section.DataBlocks[0].Type)
+	}
+
+	if section.DataBlocks[0].Label != "Example" {
+		t.Errorf("Expected label 'Example', got '%s'", section.DataBlocks[0].Label)
+	}
+
+	output := section.String()
+	if !contains(output, "```json") {
+		t.Error("Expected output to contain '```json'")
+	}
+	if !contains(output, "John Doe") {
+		t.Error("Expected output to contain 'John Doe'")
+	}
+}
+
+func TestSectionAddRawJSON(t *testing.T) {
+	section := NewSection("Data Example")
+	jsonStr := `{"key": "value", "number": 42}`
+
+	section.AddRawJSON("Raw JSON", jsonStr)
+
+	if len(section.DataBlocks) != 1 {
+		t.Errorf("Expected 1 data block, got %d", len(section.DataBlocks))
+	}
+
+	if section.DataBlocks[0].Type != "json" {
+		t.Errorf("Expected type 'json', got '%s'", section.DataBlocks[0].Type)
+	}
+
+	if section.DataBlocks[0].Content != jsonStr {
+		t.Errorf("Expected content to match input JSON")
+	}
+
+	output := section.String()
+	if !contains(output, "```json") {
+		t.Error("Expected output to contain '```json'")
+	}
+	if !contains(output, jsonStr) {
+		t.Error("Expected output to contain the JSON string")
+	}
+}
+
+func TestSectionAddXMLData(t *testing.T) {
+	type Person struct {
+		Name  string `xml:"name"`
+		Email string `xml:"email"`
+		Age   int    `xml:"age"`
+	}
+
+	section := NewSection("XML Example")
+	section.AddInstruction("Use this XML structure")
+
+	person := Person{
+		Name:  "Jane Smith",
+		Email: "jane@example.com",
+		Age:   25,
+	}
+
+	err := section.AddXMLData("Person Data", person)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+
+	if len(section.DataBlocks) != 1 {
+		t.Errorf("Expected 1 data block, got %d", len(section.DataBlocks))
+	}
+
+	if section.DataBlocks[0].Type != "xml" {
+		t.Errorf("Expected type 'xml', got '%s'", section.DataBlocks[0].Type)
+	}
+
+	output := section.String()
+	if !contains(output, "```xml") {
+		t.Error("Expected output to contain '```xml'")
+	}
+	if !contains(output, "Jane Smith") {
+		t.Error("Expected output to contain 'Jane Smith'")
+	}
+}
+
+func TestSectionAddRawXML(t *testing.T) {
+	section := NewSection("XML Data")
+	xmlStr := `<person><name>Bob</name><age>35</age></person>`
+
+	section.AddRawXML("Sample XML", xmlStr)
+
+	if len(section.DataBlocks) != 1 {
+		t.Errorf("Expected 1 data block, got %d", len(section.DataBlocks))
+	}
+
+	if section.DataBlocks[0].Type != "xml" {
+		t.Errorf("Expected type 'xml', got '%s'", section.DataBlocks[0].Type)
+	}
+
+	if section.DataBlocks[0].Content != xmlStr {
+		t.Errorf("Expected content to match input XML")
+	}
+
+	output := section.String()
+	if !contains(output, "```xml") {
+		t.Error("Expected output to contain '```xml'")
+	}
+	if !contains(output, xmlStr) {
+		t.Error("Expected output to contain the XML string")
+	}
+}
+
+func TestSectionAddRawHTML(t *testing.T) {
+	section := NewSection("HTML Template")
+	htmlStr := `<div class="container"><h1>Hello World</h1><p>This is a paragraph.</p></div>`
+
+	section.AddRawHTML("Example HTML", htmlStr)
+
+	if len(section.DataBlocks) != 1 {
+		t.Errorf("Expected 1 data block, got %d", len(section.DataBlocks))
+	}
+
+	if section.DataBlocks[0].Type != "html" {
+		t.Errorf("Expected type 'html', got '%s'", section.DataBlocks[0].Type)
+	}
+
+	if section.DataBlocks[0].Content != htmlStr {
+		t.Errorf("Expected content to match input HTML")
+	}
+
+	output := section.String()
+	if !contains(output, "```html") {
+		t.Error("Expected output to contain '```html'")
+	}
+	if !contains(output, htmlStr) {
+		t.Error("Expected output to contain the HTML string")
+	}
+}
+
+func TestSectionMultipleDataBlocks(t *testing.T) {
+	section := NewSection("Multiple Formats")
+	section.AddInstruction("Example with multiple data formats")
+
+	section.AddRawJSON("JSON Example", `{"key": "value"}`)
+	section.AddRawXML("XML Example", `<root><item>value</item></root>`)
+	section.AddRawHTML("HTML Example", `<p>Hello</p>`)
+
+	if len(section.DataBlocks) != 3 {
+		t.Errorf("Expected 3 data blocks, got %d", len(section.DataBlocks))
+	}
+
+	output := section.String()
+	if !contains(output, "```json") {
+		t.Error("Expected output to contain '```json'")
+	}
+	if !contains(output, "```xml") {
+		t.Error("Expected output to contain '```xml'")
+	}
+	if !contains(output, "```html") {
+		t.Error("Expected output to contain '```html'")
+	}
+}
+
+func TestSectionDataBlockWithoutLabel(t *testing.T) {
+	section := NewSection("Test")
+	section.AddRawJSON("", `{"test": true}`)
+
+	output := section.String()
+	if !contains(output, "```json") {
+		t.Error("Expected output to contain '```json'")
+	}
+	// Should not have a label line before the code block
+	if contains(output, ":\n```json") && !contains(output, "Test:\n") {
+		t.Error("Should not have label line when label is empty")
+	}
+}
+
+func TestSectionInstructionsAndDataBlocks(t *testing.T) {
+	section := NewSection("Complete Example")
+	section.AddInstruction("First instruction")
+	section.AddInstruction("Second instruction")
+	section.AddRawJSON("Data", `{"id": 123}`)
+
+	output := section.String()
+
+	expectedParts := []string{
+		"Complete Example:",
+		"- First instruction",
+		"- Second instruction",
+		"Data:",
+		"```json",
+		`{"id": 123}`,
+		"```",
+	}
+
+	for _, part := range expectedParts {
+		if !contains(output, part) {
+			t.Errorf("Expected output to contain '%s'", part)
+		}
+	}
+}
+
+func TestPromptWithDataBlocks(t *testing.T) {
+	p := NewPrompt()
+
+	section1 := NewSection("API Example")
+	section1.AddInstruction("Send a POST request")
+	section1.AddRawJSON("Request Body", `{"action": "create"}`)
+
+	section2 := NewSection("Response Example")
+	section2.AddRawJSON("Expected Response", `{"status": "success"}`)
+
+	p.AddSection(section1)
+	p.AddSection(section2)
+
+	output := p.String()
+
+	if !contains(output, "API Example:") {
+		t.Error("Expected output to contain first section intro")
+	}
+	if !contains(output, "Response Example:") {
+		t.Error("Expected output to contain second section intro")
+	}
+	if !contains(output, "```json") {
+		t.Error("Expected output to contain JSON code blocks")
+	}
+}
+
+func TestAddJSONDataError(t *testing.T) {
+	section := NewSection("Test")
+
+	// Create a value that cannot be marshaled to JSON (channels cannot be marshaled)
+	invalidData := make(chan int)
+
+	err := section.AddJSONData("Invalid", invalidData)
+	if err == nil {
+		t.Error("Expected error when marshaling invalid data")
+	}
+}
+
+func TestAddXMLDataError(t *testing.T) {
+	section := NewSection("Test")
+
+	// Create a value that cannot be marshaled to XML (channels cannot be marshaled)
+	invalidData := make(chan int)
+
+	err := section.AddXMLData("Invalid", invalidData)
+	if err == nil {
+		t.Error("Expected error when marshaling invalid data")
+	}
+}
+
+// Helper function for substring checks
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(s) > len(substr) && containsHelper(s, substr))
+}
+
+func containsHelper(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
 }
