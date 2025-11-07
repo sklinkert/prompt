@@ -11,7 +11,7 @@ A lightweight, well-structured Go library for building and managing prompts for 
 - **Builder Pattern**: Fluent API for constructing complex prompts
 - **Structured Sections**: Organize prompts into logical sections with intros and instructions
 - **Model Hints**: Provide suggestions for high-quality output or large token requirements
-- **Metadata Support**: Include language, system context, and output requirements
+- **Flexible Metadata**: Generic key-value metadata system with type-safe getters and backward-compatible helpers
 - **Word & Token Counting**: Built-in utilities for estimating prompt size
 - **Zero Dependencies**: Uses only Go standard library
 
@@ -90,18 +90,73 @@ p.AddSections(sections)
 
 #### Setting Metadata
 
+**Generic Metadata (Recommended)**
+
+Store arbitrary metadata with flexible key-value pairs:
+
+```go
+// Set custom metadata with any type
+p.SetMetadata("temperature", 0.7)
+p.SetMetadata("model_name", "gpt-4")
+p.SetMetadata("max_tokens", 2000)
+p.SetMetadata("use_streaming", true)
+
+// Retrieve metadata
+value, exists := p.GetMetadata("temperature")
+if exists {
+    temp := value.(float64)
+}
+
+// Type-safe retrieval
+modelName := p.GetMetadataString("model_name")      // Returns "" if not found or wrong type
+maxTokens := p.GetMetadataInt("max_tokens")         // Returns 0 if not found or wrong type
+streaming := p.GetMetadataBool("use_streaming")     // Returns false if not found or wrong type
+
+// Check existence
+if p.HasMetadata("temperature") {
+    // ...
+}
+
+// Get all metadata
+allMeta := p.GetAllMetadata()
+
+// Delete metadata
+p.DeleteMetadata("temperature")
+```
+
+**Well-Known Metadata (Backward Compatible)**
+
+For common metadata, convenience methods are available:
+
 ```go
 // Set language (ISO 639-1 code)
 p.SetLangIso6391("en")
+lang := p.GetLangIso6391()
 
 // Set system context for the LLM
 p.SetSystemContext("You are a helpful assistant")
+context := p.GetSystemContext()
 
 // Set output requirements
 p.SetOutputMinRequiredWords(300)
+minWords := p.GetOutputMinRequiredWords()
 
 // Set continuation instructions for multi-turn conversations
 p.SetContinuationInstructions("Continue from where you left off")
+instructions := p.GetContinuationInstructions()
+```
+
+**Well-Known Metadata Keys**
+
+Constants are provided for standard metadata:
+
+```go
+prompt.MetadataKeyLangIso6391              // "lang_iso_6391"
+prompt.MetadataKeySystemContext            // "system_context"
+prompt.MetadataKeyOutputMinRequiredWords   // "output_min_required_words"
+prompt.MetadataKeyContinuationInstructions // "continuation_instructions"
+prompt.MetadataKeyModelHighQuality         // "model_high_quality"
+prompt.MetadataKeyModelLargeTokens         // "model_large_tokens"
 ```
 
 #### Model Suggestions
@@ -109,9 +164,11 @@ p.SetContinuationInstructions("Continue from where you left off")
 ```go
 // Suggest high-quality output is needed
 p.SetModelSuggestionHighQualityOutput()
+isHighQuality := p.GetModelSuggestionHighQualityOutput()
 
 // Suggest large token amount will be required
 p.SetModelSuggestionLargeTokenAmountRequired()
+needsLargeTokens := p.GetModelSuggestionLargeTokenAmountRequired()
 ```
 
 #### Output and Metrics
@@ -230,6 +287,41 @@ section.AddInstruction(prompt.NewInstruction("Target: 2000 words"))
 p.AddSection(section)
 p.SetOutputMinRequiredWords(2000)
 p.SetContinuationInstructions("Continue writing the article, maintaining the same style and tone. Pick up from where you left off without repeating content.")
+```
+
+### Example 5: Custom Metadata for LLM Configuration
+
+```go
+p := prompt.NewPrompt()
+
+section := prompt.NewSection("Translate the following text")
+section.AddInstruction(prompt.NewInstruction("Source: 'Hello, how are you today?'"))
+section.AddInstruction(prompt.NewInstruction("Target language: Spanish"))
+
+p.AddSection(section)
+
+// Use generic metadata to store LLM configuration
+p.SetMetadata("model", "gpt-4")
+p.SetMetadata("temperature", 0.3)
+p.SetMetadata("max_tokens", 150)
+p.SetMetadata("top_p", 1.0)
+p.SetMetadata("presence_penalty", 0.0)
+p.SetMetadata("frequency_penalty", 0.0)
+
+// Store custom application metadata
+p.SetMetadata("user_id", "user-12345")
+p.SetMetadata("request_id", "req-abc-123")
+p.SetMetadata("cost_center", "translation-service")
+
+// Later, retrieve metadata for API call
+if p.HasMetadata("temperature") {
+    temp := p.GetMetadata("temperature")
+    // Use temp in your LLM API call
+}
+
+// Get all metadata for logging
+allMeta := p.GetAllMetadata()
+fmt.Printf("Request metadata: %+v\n", allMeta)
 ```
 
 ## Output Format
