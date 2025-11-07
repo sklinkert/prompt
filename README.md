@@ -144,19 +144,14 @@ minWords := p.GetOutputMinRequiredWords()
 // Set continuation instructions for multi-turn conversations
 p.SetContinuationInstructions("Continue from where you left off")
 instructions := p.GetContinuationInstructions()
-```
 
-**Well-Known Metadata Keys**
-
-Constants are provided for standard metadata:
-
-```go
-prompt.MetadataKeyLangIso6391              // "lang_iso_6391"
-prompt.MetadataKeySystemContext            // "system_context"
-prompt.MetadataKeyOutputMinRequiredWords   // "output_min_required_words"
-prompt.MetadataKeyContinuationInstructions // "continuation_instructions"
-prompt.MetadataKeyModelHighQuality         // "model_high_quality"
-prompt.MetadataKeyModelLargeTokens         // "model_large_tokens"
+// Or use generic metadata with well-known keys
+p.SetMetadata("lang_iso_6391", "en")
+p.SetMetadata("system_context", "You are a helpful assistant")
+p.SetMetadata("output_min_required_words", 300)
+p.SetMetadata("continuation_instructions", "Continue from where you left off")
+p.SetMetadata("model_high_quality", true)
+p.SetMetadata("model_large_tokens", true)
 ```
 
 #### Model Suggestions
