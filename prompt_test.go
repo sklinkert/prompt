@@ -59,26 +59,26 @@ func TestPromptSetters(t *testing.T) {
 
 	// Test SetLangIso6391
 	p.SetLangIso6391("en")
-	if p.LangIso6391 != "en" {
-		t.Errorf("Expected LangIso6391 to be 'en', got %s", p.LangIso6391)
+	if p.GetLangIso6391() != "en" {
+		t.Errorf("Expected LangIso6391 to be 'en', got %s", p.GetLangIso6391())
 	}
 
 	// Test SetSystemContext
 	p.SetSystemContext("test context")
-	if p.SystemContext != "test context" {
-		t.Errorf("Expected SystemContext to be 'test context', got %s", p.SystemContext)
+	if p.GetSystemContext() != "test context" {
+		t.Errorf("Expected SystemContext to be 'test context', got %s", p.GetSystemContext())
 	}
 
 	// Test SetOutputMinRequiredWords
 	p.SetOutputMinRequiredWords(500)
-	if p.OutputMinRequiredWords != 500 {
-		t.Errorf("Expected OutputMinRequiredWords to be 500, got %d", p.OutputMinRequiredWords)
+	if p.GetOutputMinRequiredWords() != 500 {
+		t.Errorf("Expected OutputMinRequiredWords to be 500, got %d", p.GetOutputMinRequiredWords())
 	}
 
 	// Test SetContinuationInstructions
 	p.SetContinuationInstructions("continue here")
-	if p.ContinuationInstructions != "continue here" {
-		t.Errorf("Expected ContinuationInstructions to be 'continue here', got %s", p.ContinuationInstructions)
+	if p.GetContinuationInstructions() != "continue here" {
+		t.Errorf("Expected ContinuationInstructions to be 'continue here', got %s", p.GetContinuationInstructions())
 	}
 }
 
@@ -86,23 +86,32 @@ func TestPromptModelSuggestions(t *testing.T) {
 	p := NewPrompt()
 
 	// Initially should be false
-	if p.ModelSuggestion.HighQualityOutput {
+	if p.GetModelSuggestionHighQualityOutput() {
 		t.Error("Expected HighQualityOutput to be false initially")
 	}
-	if p.ModelSuggestion.LargeTokenAmountRequired {
+	if p.GetModelSuggestionLargeTokenAmountRequired() {
 		t.Error("Expected LargeTokenAmountRequired to be false initially")
 	}
 
 	// Test SetModelSuggestionHighQualityOutput
 	p.SetModelSuggestionHighQualityOutput()
-	if !p.ModelSuggestion.HighQualityOutput {
+	if !p.GetModelSuggestionHighQualityOutput() {
 		t.Error("Expected HighQualityOutput to be true after setting")
 	}
 
 	// Test SetModelSuggestionLargeTokenAmountRequired
 	p.SetModelSuggestionLargeTokenAmountRequired()
-	if !p.ModelSuggestion.LargeTokenAmountRequired {
+	if !p.GetModelSuggestionLargeTokenAmountRequired() {
 		t.Error("Expected LargeTokenAmountRequired to be true after setting")
+	}
+
+	// Test backward compatible GetModelSuggestion method
+	ms := p.GetModelSuggestion()
+	if !ms.HighQualityOutput {
+		t.Error("Expected HighQualityOutput to be true in ModelSuggestion struct")
+	}
+	if !ms.LargeTokenAmountRequired {
+		t.Error("Expected LargeTokenAmountRequired to be true in ModelSuggestion struct")
 	}
 }
 
@@ -118,6 +127,180 @@ func TestPromptAddSections(t *testing.T) {
 
 	if len(p.Sections) != 2 {
 		t.Errorf("Expected 2 sections, got %d", len(p.Sections))
+	}
+}
+
+func TestPromptGenericMetadata(t *testing.T) {
+	p := NewPrompt()
+
+	// Test setting and getting generic metadata
+	p.SetMetadata("custom_key", "custom_value")
+	value, exists := p.GetMetadata("custom_key")
+	if !exists {
+		t.Error("Expected custom_key to exist")
+	}
+	if value != "custom_value" {
+		t.Errorf("Expected 'custom_value', got %v", value)
+	}
+
+	// Test non-existent key
+	_, exists = p.GetMetadata("non_existent")
+	if exists {
+		t.Error("Expected non_existent key to not exist")
+	}
+
+	// Test different data types
+	p.SetMetadata("int_value", 42)
+	p.SetMetadata("bool_value", true)
+	p.SetMetadata("float_value", 3.14)
+
+	intVal, exists := p.GetMetadata("int_value")
+	if !exists || intVal != 42 {
+		t.Errorf("Expected int_value to be 42, got %v", intVal)
+	}
+
+	boolVal, exists := p.GetMetadata("bool_value")
+	if !exists || boolVal != true {
+		t.Errorf("Expected bool_value to be true, got %v", boolVal)
+	}
+
+	floatVal, exists := p.GetMetadata("float_value")
+	if !exists || floatVal != 3.14 {
+		t.Errorf("Expected float_value to be 3.14, got %v", floatVal)
+	}
+}
+
+func TestPromptMetadataTypedGetters(t *testing.T) {
+	p := NewPrompt()
+
+	// Test GetMetadataString
+	p.SetMetadata("string_key", "test_string")
+	if p.GetMetadataString("string_key") != "test_string" {
+		t.Errorf("Expected 'test_string', got %s", p.GetMetadataString("string_key"))
+	}
+
+	// Test GetMetadataString with non-existent key
+	if p.GetMetadataString("non_existent") != "" {
+		t.Error("Expected empty string for non-existent key")
+	}
+
+	// Test GetMetadataString with wrong type
+	p.SetMetadata("int_key", 42)
+	if p.GetMetadataString("int_key") != "" {
+		t.Error("Expected empty string for wrong type")
+	}
+
+	// Test GetMetadataInt
+	p.SetMetadata("int_key", 123)
+	if p.GetMetadataInt("int_key") != 123 {
+		t.Errorf("Expected 123, got %d", p.GetMetadataInt("int_key"))
+	}
+
+	// Test GetMetadataInt with non-existent key
+	if p.GetMetadataInt("non_existent") != 0 {
+		t.Error("Expected 0 for non-existent key")
+	}
+
+	// Test GetMetadataInt with wrong type
+	p.SetMetadata("string_key", "not_an_int")
+	if p.GetMetadataInt("string_key") != 0 {
+		t.Error("Expected 0 for wrong type")
+	}
+
+	// Test GetMetadataBool
+	p.SetMetadata("bool_key", true)
+	if !p.GetMetadataBool("bool_key") {
+		t.Error("Expected true for bool_key")
+	}
+
+	// Test GetMetadataBool with non-existent key
+	if p.GetMetadataBool("non_existent") {
+		t.Error("Expected false for non-existent key")
+	}
+
+	// Test GetMetadataBool with wrong type
+	p.SetMetadata("string_key", "not_a_bool")
+	if p.GetMetadataBool("string_key") {
+		t.Error("Expected false for wrong type")
+	}
+}
+
+func TestPromptMetadataHelpers(t *testing.T) {
+	p := NewPrompt()
+
+	// Test HasMetadata
+	p.SetMetadata("test_key", "test_value")
+	if !p.HasMetadata("test_key") {
+		t.Error("Expected test_key to exist")
+	}
+	if p.HasMetadata("non_existent") {
+		t.Error("Expected non_existent to not exist")
+	}
+
+	// Test GetAllMetadata
+	p.SetMetadata("key1", "value1")
+	p.SetMetadata("key2", 42)
+	p.SetMetadata("key3", true)
+
+	allMetadata := p.GetAllMetadata()
+	if len(allMetadata) != 4 { // test_key + key1 + key2 + key3
+		t.Errorf("Expected 4 metadata entries, got %d", len(allMetadata))
+	}
+	if allMetadata["key1"] != "value1" {
+		t.Error("Expected key1 to be 'value1'")
+	}
+
+	// Test that GetAllMetadata returns a copy (mutations don't affect original)
+	allMetadata["new_key"] = "new_value"
+	if p.HasMetadata("new_key") {
+		t.Error("Expected modifications to returned map to not affect original")
+	}
+
+	// Test DeleteMetadata
+	p.DeleteMetadata("key1")
+	if p.HasMetadata("key1") {
+		t.Error("Expected key1 to be deleted")
+	}
+	if !p.HasMetadata("key2") {
+		t.Error("Expected key2 to still exist")
+	}
+
+	// Test deleting non-existent key (should not panic)
+	p.DeleteMetadata("non_existent")
+}
+
+func TestPromptMetadataConstants(t *testing.T) {
+	p := NewPrompt()
+
+	// Test that backward compatible methods use the correct metadata keys
+	p.SetLangIso6391("en")
+	if p.GetMetadataString(MetadataKeyLangIso6391) != "en" {
+		t.Error("Expected SetLangIso6391 to use MetadataKeyLangIso6391")
+	}
+
+	p.SetSystemContext("context")
+	if p.GetMetadataString(MetadataKeySystemContext) != "context" {
+		t.Error("Expected SetSystemContext to use MetadataKeySystemContext")
+	}
+
+	p.SetOutputMinRequiredWords(100)
+	if p.GetMetadataInt(MetadataKeyOutputMinRequiredWords) != 100 {
+		t.Error("Expected SetOutputMinRequiredWords to use MetadataKeyOutputMinRequiredWords")
+	}
+
+	p.SetContinuationInstructions("continue")
+	if p.GetMetadataString(MetadataKeyContinuationInstructions) != "continue" {
+		t.Error("Expected SetContinuationInstructions to use MetadataKeyContinuationInstructions")
+	}
+
+	p.SetModelSuggestionHighQualityOutput()
+	if !p.GetMetadataBool(MetadataKeyModelHighQuality) {
+		t.Error("Expected SetModelSuggestionHighQualityOutput to use MetadataKeyModelHighQuality")
+	}
+
+	p.SetModelSuggestionLargeTokenAmountRequired()
+	if !p.GetMetadataBool(MetadataKeyModelLargeTokens) {
+		t.Error("Expected SetModelSuggestionLargeTokenAmountRequired to use MetadataKeyModelLargeTokens")
 	}
 }
 
