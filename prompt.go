@@ -1,15 +1,5 @@
 package prompt
 
-// Well-known metadata keys
-const (
-	MetadataKeyLangIso6391              = "lang_iso_6391"
-	MetadataKeySystemContext            = "system_context"
-	MetadataKeyOutputMinRequiredWords   = "output_min_required_words"
-	MetadataKeyContinuationInstructions = "continuation_instructions"
-	MetadataKeyModelHighQuality         = "model_high_quality"
-	MetadataKeyModelLargeTokens         = "model_large_tokens"
-)
-
 type Prompt struct {
 	Sections []Section
 	metadata map[string]any
@@ -102,68 +92,53 @@ func (p *Prompt) DeleteMetadata(key string) {
 // Backward compatible methods
 
 func (p *Prompt) SetModelSuggestionHighQualityOutput() {
-	p.SetMetadata(MetadataKeyModelHighQuality, true)
+	p.SetMetadata("model_high_quality", true)
 }
 
 func (p *Prompt) SetContinuationInstructions(continuationInstructions string) {
-	p.SetMetadata(MetadataKeyContinuationInstructions, continuationInstructions)
+	p.SetMetadata("continuation_instructions", continuationInstructions)
 }
 
 func (p *Prompt) SetOutputMinRequiredWords(outputMinRequiredWords int) {
-	p.SetMetadata(MetadataKeyOutputMinRequiredWords, outputMinRequiredWords)
+	p.SetMetadata("output_min_required_words", outputMinRequiredWords)
 }
 
 func (p *Prompt) SetModelSuggestionLargeTokenAmountRequired() {
-	p.SetMetadata(MetadataKeyModelLargeTokens, true)
+	p.SetMetadata("model_large_tokens", true)
 }
 
 func (p *Prompt) SetLangIso6391(langIso6391 string) {
-	p.SetMetadata(MetadataKeyLangIso6391, langIso6391)
+	p.SetMetadata("lang_iso_6391", langIso6391)
 }
 
 func (p *Prompt) SetSystemContext(systemContext string) {
-	p.SetMetadata(MetadataKeySystemContext, systemContext)
+	p.SetMetadata("system_context", systemContext)
 }
 
 // Backward compatible getters
 
 func (p *Prompt) GetModelSuggestionHighQualityOutput() bool {
-	return p.GetMetadataBool(MetadataKeyModelHighQuality)
+	return p.GetMetadataBool("model_high_quality")
 }
 
 func (p *Prompt) GetContinuationInstructions() string {
-	return p.GetMetadataString(MetadataKeyContinuationInstructions)
+	return p.GetMetadataString("continuation_instructions")
 }
 
 func (p *Prompt) GetOutputMinRequiredWords() int {
-	return p.GetMetadataInt(MetadataKeyOutputMinRequiredWords)
+	return p.GetMetadataInt("output_min_required_words")
 }
 
 func (p *Prompt) GetModelSuggestionLargeTokenAmountRequired() bool {
-	return p.GetMetadataBool(MetadataKeyModelLargeTokens)
+	return p.GetMetadataBool("model_large_tokens")
 }
 
 func (p *Prompt) GetLangIso6391() string {
-	return p.GetMetadataString(MetadataKeyLangIso6391)
+	return p.GetMetadataString("lang_iso_6391")
 }
 
 func (p *Prompt) GetSystemContext() string {
-	return p.GetMetadataString(MetadataKeySystemContext)
-}
-
-// Deprecated: Use GetModelSuggestionHighQualityOutput and GetModelSuggestionLargeTokenAmountRequired
-type ModelSuggestion struct {
-	HighQualityOutput        bool
-	LargeTokenAmountRequired bool
-}
-
-// GetModelSuggestion returns model suggestions in the deprecated format for backward compatibility
-// Deprecated: Access metadata directly using GetModelSuggestionHighQualityOutput and GetModelSuggestionLargeTokenAmountRequired
-func (p *Prompt) GetModelSuggestion() ModelSuggestion {
-	return ModelSuggestion{
-		HighQualityOutput:        p.GetModelSuggestionHighQualityOutput(),
-		LargeTokenAmountRequired: p.GetModelSuggestionLargeTokenAmountRequired(),
-	}
+	return p.GetMetadataString("system_context")
 }
 
 func (p *Prompt) AddSection(section Section) {

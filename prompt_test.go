@@ -104,15 +104,6 @@ func TestPromptModelSuggestions(t *testing.T) {
 	if !p.GetModelSuggestionLargeTokenAmountRequired() {
 		t.Error("Expected LargeTokenAmountRequired to be true after setting")
 	}
-
-	// Test backward compatible GetModelSuggestion method
-	ms := p.GetModelSuggestion()
-	if !ms.HighQualityOutput {
-		t.Error("Expected HighQualityOutput to be true in ModelSuggestion struct")
-	}
-	if !ms.LargeTokenAmountRequired {
-		t.Error("Expected LargeTokenAmountRequired to be true in ModelSuggestion struct")
-	}
 }
 
 func TestPromptAddSections(t *testing.T) {
@@ -269,38 +260,38 @@ func TestPromptMetadataHelpers(t *testing.T) {
 	p.DeleteMetadata("non_existent")
 }
 
-func TestPromptMetadataConstants(t *testing.T) {
+func TestPromptMetadataKeys(t *testing.T) {
 	p := NewPrompt()
 
 	// Test that backward compatible methods use the correct metadata keys
 	p.SetLangIso6391("en")
-	if p.GetMetadataString(MetadataKeyLangIso6391) != "en" {
-		t.Error("Expected SetLangIso6391 to use MetadataKeyLangIso6391")
+	if p.GetMetadataString("lang_iso_6391") != "en" {
+		t.Error("Expected SetLangIso6391 to use 'lang_iso_6391' key")
 	}
 
 	p.SetSystemContext("context")
-	if p.GetMetadataString(MetadataKeySystemContext) != "context" {
-		t.Error("Expected SetSystemContext to use MetadataKeySystemContext")
+	if p.GetMetadataString("system_context") != "context" {
+		t.Error("Expected SetSystemContext to use 'system_context' key")
 	}
 
 	p.SetOutputMinRequiredWords(100)
-	if p.GetMetadataInt(MetadataKeyOutputMinRequiredWords) != 100 {
-		t.Error("Expected SetOutputMinRequiredWords to use MetadataKeyOutputMinRequiredWords")
+	if p.GetMetadataInt("output_min_required_words") != 100 {
+		t.Error("Expected SetOutputMinRequiredWords to use 'output_min_required_words' key")
 	}
 
 	p.SetContinuationInstructions("continue")
-	if p.GetMetadataString(MetadataKeyContinuationInstructions) != "continue" {
-		t.Error("Expected SetContinuationInstructions to use MetadataKeyContinuationInstructions")
+	if p.GetMetadataString("continuation_instructions") != "continue" {
+		t.Error("Expected SetContinuationInstructions to use 'continuation_instructions' key")
 	}
 
 	p.SetModelSuggestionHighQualityOutput()
-	if !p.GetMetadataBool(MetadataKeyModelHighQuality) {
-		t.Error("Expected SetModelSuggestionHighQualityOutput to use MetadataKeyModelHighQuality")
+	if !p.GetMetadataBool("model_high_quality") {
+		t.Error("Expected SetModelSuggestionHighQualityOutput to use 'model_high_quality' key")
 	}
 
 	p.SetModelSuggestionLargeTokenAmountRequired()
-	if !p.GetMetadataBool(MetadataKeyModelLargeTokens) {
-		t.Error("Expected SetModelSuggestionLargeTokenAmountRequired to use MetadataKeyModelLargeTokens")
+	if !p.GetMetadataBool("model_large_tokens") {
+		t.Error("Expected SetModelSuggestionLargeTokenAmountRequired to use 'model_large_tokens' key")
 	}
 }
 
