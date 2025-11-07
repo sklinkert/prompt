@@ -10,6 +10,7 @@ A lightweight, well-structured Go library for building and managing prompts for 
 
 - **Builder Pattern**: Fluent API for constructing complex prompts
 - **Structured Sections**: Organize prompts into logical sections with intros and instructions
+- **Structured Data Support**: Add JSON, XML, and HTML data blocks with automatic code fence formatting
 - **Model Hints**: Provide suggestions for high-quality output or large token requirements
 - **Flexible Metadata**: Generic key-value metadata system with type-safe getters and backward-compatible helpers
 - **Word & Token Counting**: Built-in utilities for estimating prompt size
@@ -43,7 +44,7 @@ func main() {
 
     p.AddSection(section)
 
-    // Set metadata
+    // Set optional metadata
     p.SetMetadata("lang_iso_6391", "en")
     p.SetMetadata("system_context", "You are a technical writer specializing in Go")
     p.SetMetadata("model_high_quality", true)
@@ -184,6 +185,53 @@ formatted := section.String()
 words := section.WordsCount()
 ```
 
+#### Adding Structured Data (JSON/XML/HTML)
+
+Sections support adding structured data blocks with proper code fence formatting:
+
+```go
+section := prompt.NewSection("API Documentation")
+
+// Add JSON data by marshaling Go objects
+data := map[string]interface{}{
+    "name": "John Doe",
+    "email": "john@example.com",
+}
+err := section.AddJSONData("Example User", data)
+
+// Add raw JSON string
+section.AddRawJSON("Request Body", `{"action": "create", "id": 123}`)
+
+// Add XML data by marshaling Go structs
+type Person struct {
+    Name string `xml:"name"`
+    Age  int    `xml:"age"`
+}
+person := Person{Name: "Jane", Age: 30}
+err = section.AddXMLData("Person XML", person)
+
+// Add raw XML string
+section.AddRawXML("Config", `<config><enabled>true</enabled></config>`)
+
+// Add raw HTML string
+section.AddRawHTML("Template", `<div><h1>Title</h1><p>Content</p></div>`)
+```
+
+**Output format:**
+```
+API Documentation:
+
+Example User:
+​```json
+{
+  "name": "John Doe",
+  "email": "john@example.com"
+}
+​```
+```
+
+Data blocks are automatically formatted with code fences (```json, ```xml, ```html) for clear LLM consumption.
+
 ### Instruction
 
 Represents a single instruction within a section.
@@ -303,6 +351,104 @@ if p.HasMetadata("temperature") {
 // Get all metadata for logging
 allMeta := p.GetAllMetadata()
 fmt.Printf("Request metadata: %+v\n", allMeta)
+```
+
+### Example 6: Using Structured Data (JSON/XML/HTML)
+
+```go
+p := prompt.NewPrompt()
+
+// Example with JSON API request/response
+apiSection := prompt.NewSection("API Integration Task")
+apiSection.AddInstruction(prompt.NewInstruction("Send a POST request to create a user"))
+apiSection.AddInstruction(prompt.NewInstruction("Use the following JSON structure"))
+
+// Add JSON request example
+requestData := map[string]interface{}{
+    "username": "johndoe",
+    "email":    "john@example.com",
+    "role":     "admin",
+}
+apiSection.AddJSONData("Request Body", requestData)
+
+// Add expected JSON response
+apiSection.AddRawJSON("Expected Response", `{
+  "id": "user-123",
+  "status": "created",
+  "message": "User created successfully"
+}`)
+
+p.AddSection(apiSection)
+
+// Example with XML configuration
+xmlSection := prompt.NewSection("Process the following XML configuration")
+xmlSection.AddRawXML("Database Config", `<database>
+  <host>localhost</host>
+  <port>5432</port>
+  <name>myapp</name>
+</database>`)
+
+p.AddSection(xmlSection)
+
+// Example with HTML template
+htmlSection := prompt.NewSection("Generate content based on this HTML structure")
+htmlSection.AddRawHTML("Template", `<div class="user-card">
+  <h2 class="user-name">{{name}}</h2>
+  <p class="user-email">{{email}}</p>
+</div>`)
+
+p.AddSection(htmlSection)
+
+fmt.Println(p.String())
+```
+
+**Output:**
+```
+API Integration Task:
+- Send a POST request to create a user
+- Use the following JSON structure
+
+Request Body:
+​```json
+{
+  "username": "johndoe",
+  "email": "john@example.com",
+  "role": "admin"
+}
+​```
+
+Expected Response:
+​```json
+{
+  "id": "user-123",
+  "status": "created",
+  "message": "User created successfully"
+}
+​```
+---
+
+Process the following XML configuration:
+
+Database Config:
+​```xml
+<database>
+  <host>localhost</host>
+  <port>5432</port>
+  <name>myapp</name>
+</database>
+​```
+---
+
+Generate content based on this HTML structure:
+
+Template:
+​```html
+<div class="user-card">
+  <h2 class="user-name">{{name}}</h2>
+  <p class="user-email">{{email}}</p>
+</div>
+​```
+---
 ```
 
 ## Output Format
