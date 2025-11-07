@@ -58,6 +58,18 @@ func main() {
 }
 ```
 
+**Output:**
+
+```
+Write a blog post about Go programming:
+- Focus on concurrency patterns
+- Include code examples
+- Target audience: intermediate developers
+---
+Word count: 9
+Estimated tokens: 12
+```
+
 ## API Documentation
 
 ### Prompt
