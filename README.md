@@ -44,10 +44,10 @@ func main() {
     p.AddSection(section)
 
     // Set metadata
-    p.SetLangIso6391("en")
-    p.SetSystemContext("You are a technical writer specializing in Go")
-    p.SetModelSuggestionHighQualityOutput()
-    p.SetOutputMinRequiredWords(500)
+    p.SetMetadata("lang_iso_6391", "en")
+    p.SetMetadata("system_context", "You are a technical writer specializing in Go")
+    p.SetMetadata("model_high_quality", true)
+    p.SetMetadata("output_min_required_words", 500)
 
     // Output the formatted prompt
     fmt.Println(p.String())
@@ -90,8 +90,6 @@ p.AddSections(sections)
 
 #### Setting Metadata
 
-**Generic Metadata (Recommended)**
-
 Store arbitrary metadata with flexible key-value pairs:
 
 ```go
@@ -124,46 +122,22 @@ allMeta := p.GetAllMetadata()
 p.DeleteMetadata("temperature")
 ```
 
-**Well-Known Metadata (Backward Compatible)**
+**Common Metadata Keys**
 
-For common metadata, convenience methods are available:
+Example metadata keys you might use:
 
 ```go
-// Set language (ISO 639-1 code)
-p.SetLangIso6391("en")
-lang := p.GetLangIso6391()
-
-// Set system context for the LLM
-p.SetSystemContext("You are a helpful assistant")
-context := p.GetSystemContext()
-
-// Set output requirements
-p.SetOutputMinRequiredWords(300)
-minWords := p.GetOutputMinRequiredWords()
-
-// Set continuation instructions for multi-turn conversations
-p.SetContinuationInstructions("Continue from where you left off")
-instructions := p.GetContinuationInstructions()
-
-// Or use generic metadata with well-known keys
+// Language and context
 p.SetMetadata("lang_iso_6391", "en")
 p.SetMetadata("system_context", "You are a helpful assistant")
+
+// Output requirements
 p.SetMetadata("output_min_required_words", 300)
 p.SetMetadata("continuation_instructions", "Continue from where you left off")
+
+// Model suggestions
 p.SetMetadata("model_high_quality", true)
 p.SetMetadata("model_large_tokens", true)
-```
-
-#### Model Suggestions
-
-```go
-// Suggest high-quality output is needed
-p.SetModelSuggestionHighQualityOutput()
-isHighQuality := p.GetModelSuggestionHighQualityOutput()
-
-// Suggest large token amount will be required
-p.SetModelSuggestionLargeTokenAmountRequired()
-needsLargeTokens := p.GetModelSuggestionLargeTokenAmountRequired()
 ```
 
 #### Output and Metrics
@@ -226,7 +200,7 @@ section.AddInstruction(prompt.NewInstruction("Tone: Professional and engaging"))
 section.AddInstruction(prompt.NewInstruction("Length: 150-200 words"))
 
 p.AddSection(section)
-p.SetLangIso6391("en")
+p.SetMetadata("lang_iso_6391", "en")
 ```
 
 ### Example 2: Multi-Section Research Prompt
@@ -250,8 +224,8 @@ output.AddInstruction(prompt.NewInstruction("Use markdown formatting"))
 output.AddInstruction(prompt.NewInstruction("Include citations"))
 
 p.AddSections([]prompt.Section{research, analysis, output})
-p.SetModelSuggestionHighQualityOutput()
-p.SetModelSuggestionLargeTokenAmountRequired()
+p.SetMetadata("model_high_quality", true)
+p.SetMetadata("model_large_tokens", true)
 ```
 
 ### Example 3: Code Generation with Context
@@ -266,8 +240,8 @@ section.AddInstruction(prompt.NewInstruction("Return JWT token on success"))
 section.AddInstruction(prompt.NewInstruction("Use echo/v4 framework"))
 
 p.AddSection(section)
-p.SetSystemContext("You are an expert Go backend developer")
-p.SetLangIso6391("en")
+p.SetMetadata("system_context", "You are an expert Go backend developer")
+p.SetMetadata("lang_iso_6391", "en")
 ```
 
 ### Example 4: Continuation Instructions
@@ -280,8 +254,8 @@ section.AddInstruction(prompt.NewInstruction("Topic: Microservices architecture"
 section.AddInstruction(prompt.NewInstruction("Target: 2000 words"))
 
 p.AddSection(section)
-p.SetOutputMinRequiredWords(2000)
-p.SetContinuationInstructions("Continue writing the article, maintaining the same style and tone. Pick up from where you left off without repeating content.")
+p.SetMetadata("output_min_required_words", 2000)
+p.SetMetadata("continuation_instructions", "Continue writing the article, maintaining the same style and tone. Pick up from where you left off without repeating content.")
 ```
 
 ### Example 5: Custom Metadata for LLM Configuration

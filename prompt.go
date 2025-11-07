@@ -89,58 +89,6 @@ func (p *Prompt) DeleteMetadata(key string) {
 	}
 }
 
-// Backward compatible methods
-
-func (p *Prompt) SetModelSuggestionHighQualityOutput() {
-	p.SetMetadata("model_high_quality", true)
-}
-
-func (p *Prompt) SetContinuationInstructions(continuationInstructions string) {
-	p.SetMetadata("continuation_instructions", continuationInstructions)
-}
-
-func (p *Prompt) SetOutputMinRequiredWords(outputMinRequiredWords int) {
-	p.SetMetadata("output_min_required_words", outputMinRequiredWords)
-}
-
-func (p *Prompt) SetModelSuggestionLargeTokenAmountRequired() {
-	p.SetMetadata("model_large_tokens", true)
-}
-
-func (p *Prompt) SetLangIso6391(langIso6391 string) {
-	p.SetMetadata("lang_iso_6391", langIso6391)
-}
-
-func (p *Prompt) SetSystemContext(systemContext string) {
-	p.SetMetadata("system_context", systemContext)
-}
-
-// Backward compatible getters
-
-func (p *Prompt) GetModelSuggestionHighQualityOutput() bool {
-	return p.GetMetadataBool("model_high_quality")
-}
-
-func (p *Prompt) GetContinuationInstructions() string {
-	return p.GetMetadataString("continuation_instructions")
-}
-
-func (p *Prompt) GetOutputMinRequiredWords() int {
-	return p.GetMetadataInt("output_min_required_words")
-}
-
-func (p *Prompt) GetModelSuggestionLargeTokenAmountRequired() bool {
-	return p.GetMetadataBool("model_large_tokens")
-}
-
-func (p *Prompt) GetLangIso6391() string {
-	return p.GetMetadataString("lang_iso_6391")
-}
-
-func (p *Prompt) GetSystemContext() string {
-	return p.GetMetadataString("system_context")
-}
-
 func (p *Prompt) AddSection(section Section) {
 	p.Sections = append(p.Sections, section)
 }

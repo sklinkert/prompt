@@ -54,58 +54,6 @@ func TestPromptEmpty(t *testing.T) {
 	}
 }
 
-func TestPromptSetters(t *testing.T) {
-	p := NewPrompt()
-
-	// Test SetLangIso6391
-	p.SetLangIso6391("en")
-	if p.GetLangIso6391() != "en" {
-		t.Errorf("Expected LangIso6391 to be 'en', got %s", p.GetLangIso6391())
-	}
-
-	// Test SetSystemContext
-	p.SetSystemContext("test context")
-	if p.GetSystemContext() != "test context" {
-		t.Errorf("Expected SystemContext to be 'test context', got %s", p.GetSystemContext())
-	}
-
-	// Test SetOutputMinRequiredWords
-	p.SetOutputMinRequiredWords(500)
-	if p.GetOutputMinRequiredWords() != 500 {
-		t.Errorf("Expected OutputMinRequiredWords to be 500, got %d", p.GetOutputMinRequiredWords())
-	}
-
-	// Test SetContinuationInstructions
-	p.SetContinuationInstructions("continue here")
-	if p.GetContinuationInstructions() != "continue here" {
-		t.Errorf("Expected ContinuationInstructions to be 'continue here', got %s", p.GetContinuationInstructions())
-	}
-}
-
-func TestPromptModelSuggestions(t *testing.T) {
-	p := NewPrompt()
-
-	// Initially should be false
-	if p.GetModelSuggestionHighQualityOutput() {
-		t.Error("Expected HighQualityOutput to be false initially")
-	}
-	if p.GetModelSuggestionLargeTokenAmountRequired() {
-		t.Error("Expected LargeTokenAmountRequired to be false initially")
-	}
-
-	// Test SetModelSuggestionHighQualityOutput
-	p.SetModelSuggestionHighQualityOutput()
-	if !p.GetModelSuggestionHighQualityOutput() {
-		t.Error("Expected HighQualityOutput to be true after setting")
-	}
-
-	// Test SetModelSuggestionLargeTokenAmountRequired
-	p.SetModelSuggestionLargeTokenAmountRequired()
-	if !p.GetModelSuggestionLargeTokenAmountRequired() {
-		t.Error("Expected LargeTokenAmountRequired to be true after setting")
-	}
-}
-
 func TestPromptAddSections(t *testing.T) {
 	p := NewPrompt()
 
@@ -258,41 +206,6 @@ func TestPromptMetadataHelpers(t *testing.T) {
 
 	// Test deleting non-existent key (should not panic)
 	p.DeleteMetadata("non_existent")
-}
-
-func TestPromptMetadataKeys(t *testing.T) {
-	p := NewPrompt()
-
-	// Test that backward compatible methods use the correct metadata keys
-	p.SetLangIso6391("en")
-	if p.GetMetadataString("lang_iso_6391") != "en" {
-		t.Error("Expected SetLangIso6391 to use 'lang_iso_6391' key")
-	}
-
-	p.SetSystemContext("context")
-	if p.GetMetadataString("system_context") != "context" {
-		t.Error("Expected SetSystemContext to use 'system_context' key")
-	}
-
-	p.SetOutputMinRequiredWords(100)
-	if p.GetMetadataInt("output_min_required_words") != 100 {
-		t.Error("Expected SetOutputMinRequiredWords to use 'output_min_required_words' key")
-	}
-
-	p.SetContinuationInstructions("continue")
-	if p.GetMetadataString("continuation_instructions") != "continue" {
-		t.Error("Expected SetContinuationInstructions to use 'continuation_instructions' key")
-	}
-
-	p.SetModelSuggestionHighQualityOutput()
-	if !p.GetMetadataBool("model_high_quality") {
-		t.Error("Expected SetModelSuggestionHighQualityOutput to use 'model_high_quality' key")
-	}
-
-	p.SetModelSuggestionLargeTokenAmountRequired()
-	if !p.GetMetadataBool("model_large_tokens") {
-		t.Error("Expected SetModelSuggestionLargeTokenAmountRequired to use 'model_large_tokens' key")
-	}
 }
 
 func TestSection(t *testing.T) {
